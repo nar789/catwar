@@ -31,8 +31,8 @@ public class CatCatcher : MonoBehaviour
                 Cat cat = col.GetComponent<Cat>();
                 cat.hitBySpeaker();
             }
-            GameController.Instance.addSurpriseCat(colliders.Length);
-            GameController.Instance.showToast("스피커가 송출되었습니다", 1);
+            //GameController.Instance.addSurpriseCat(colliders.Length);
+            //GameController.Instance.showToast("스피커가 송출되었습니다", 1);
         } else
         {
             GameController.Instance.showToast("주변에 냥이가 없습니다.\n더 가까이 다가가세요.", 2);

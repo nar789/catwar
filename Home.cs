@@ -17,15 +17,34 @@ public class Home : MonoBehaviour
 
     public void goToUp(int idx)
     {
-        if(idx == 0)
+        
+        if (idx == 0)
         {
             SceneManager.LoadScene("Intro");
         }
         else
         {
-            GameController.Instance.goToHome();
-            SceneManager.LoadScene("Stage");
+
+            GameController.Instance.playClickAudio();
+            GameController.Instance.openPanel(5);
         }
        
+    }
+
+    public void onPauseBtn()
+    {
+        GameController.Instance.playClickAudio();
+        GameController.Instance.pauseLastAudio();
+        GameController.Instance.setIsPause(true);
+        Time.timeScale = 0;
+        
+    }
+
+    public void onPlayBtn()
+    {
+        GameController.Instance.playClickAudio();
+        GameController.Instance.playLastAudio();
+        GameController.Instance.setIsPause(false);
+        Time.timeScale = 1;
     }
 }

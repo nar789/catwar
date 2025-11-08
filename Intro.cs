@@ -22,6 +22,16 @@ public class Intro : MonoBehaviour
 
     }
 
+    private void Update()
+    {
+        #if UNITY_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+        #endif
+    }
+
 
     public void onGameStart()
     {

@@ -16,11 +16,10 @@ public class ScorePanel : MonoBehaviour
 
 
 
-    public void setTime(float time, int cnt)
+    public void setTime(float time, int gold)
     {
-        bonus = 0;
-        int timeBonus = 0;
-   
+        bonus = gold;
+        
         string sec = (time % 60).ToString("f2");
         if (sec.Length <= 4)
         {
@@ -30,32 +29,13 @@ public class ScorePanel : MonoBehaviour
         string hh = Mathf.FloorToInt(time / 60 / 60).ToString("D2");
         timeText.text = hh + ":" + mm + ":" + sec;
 
-
-        if(5 * cnt >= time)
-        {
-            timeBonus += 500;
-        } else if((5 * cnt) / 2 >= time)
-        {
-            timeBonus += 1000;
-        } else if((5 * cnt) / 3>= time)
-        {
-            timeBonus += 2000;
-        }
-
-        bonus += timeBonus;
-
-        timeBonusText.text = $"{timeBonus:N0}G";
+        timeBonusText.text = $"{bonus:N0}G";
         totalBonusText.text = $"{bonus:N0}G";
-        //GameController.Instance.earnGold(bonus);
     }
 
 
-    public void setCat(int cat, int stage)
+    public void setCat(int cat)
     {
-        if(cat > (stage + 1))
-        {
-            cat = stage + 1;
-        }
         int catBonus = cat * 20;
         catBonusCntText.text = $"{cat:N0}";
         catBonusText.text = $"{catBonus:N0}G";
@@ -63,9 +43,6 @@ public class ScorePanel : MonoBehaviour
         totalBonusText.text = $"{bonus:N0}G";
         GameController.Instance.earnGold(bonus);
     }
-
-    
-
 
 
 }

@@ -12,6 +12,7 @@ public class Cat : MonoBehaviour
     float patrolTime = 10;
     float restTime = 10;
     float curTime = 10;
+
     enum CMD
     {
         PATROL,
@@ -23,6 +24,9 @@ public class Cat : MonoBehaviour
     }
     CMD cmd = CMD.PATROL;
     Vector3 target;
+
+
+    AudioSource catAudio;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -39,7 +43,7 @@ public class Cat : MonoBehaviour
         hashList.Add(Animator.StringToHash("isClean"));
 
         agent = GetComponent<NavMeshAgent>();
-
+        catAudio = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -155,15 +159,16 @@ public class Cat : MonoBehaviour
         agent.ResetPath();
         clearAnimation();
         transform.LookAt(pos);
+        catAudio.Play();
         attack();
-        robo.hit();
+        robo.hit(2);
         transform.LookAt(pos);
-        StartCoroutine(patroAfterWait());
+        StartCoroutine(patroAfterWait(2));
     }
 
-    IEnumerator patroAfterWait()
+    IEnumerator patroAfterWait(float sec)
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(sec);
         clearAnimation();
         cmd = CMD.PATROL;
     }
@@ -174,7 +179,7 @@ public class Cat : MonoBehaviour
         StopAllCoroutines();
         agent.ResetPath();
         hit();
-        StartCoroutine(patroAfterWait());
+        StartCoroutine(patroAfterWait(5));
     }
 
     public bool isHitCmd()

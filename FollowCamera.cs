@@ -8,10 +8,24 @@ public class FollowCamera : MonoBehaviour
 
     private Vector3 velocity = Vector3.zero; // SmoothDamp에서 사용할 속도 변수
 
+    CameraShake cameraShake;
+
+    private void Start()
+    {
+        cameraShake = GetComponent<CameraShake>();
+    }
+
     void LateUpdate()
     {
         if (target == null)
+        {
             return;
+        }
+
+       if(cameraShake.getIsShake())
+        {
+            return;
+        }
 
         // 목표 위치 계산
         Vector3 desiredPosition = target.position + offset;

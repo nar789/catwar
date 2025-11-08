@@ -1,32 +1,28 @@
 using UnityEngine;
 
-public class RoboCatcher : MonoBehaviour
+public class RoboCatcher2 : MonoBehaviour
 {
 
     public float radius = 0f;
     public LayerMask layer;
 
     public Collider[] colliders;
-    Cat cat;
-    float lastAttackTime = 0;
+
+    EnemyScript enemy;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        cat = GetComponent<Cat>();
+        enemy = GetComponent<EnemyScript>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(cat.isHitCmd() || GameController.Instance.getTime() < 10f || GameController.Instance.isCharging())
+        if(GameController.Instance.isCharging() || GameController.Instance.getIsGameOver())
         {
-            return;
-        }
-
-        if(Time.time - lastAttackTime <= 10f)
-        {
+            enemy.setCmd(EnemyScript.CMD.PATROL);
             return;
         }
 
@@ -59,14 +55,18 @@ public class RoboCatcher : MonoBehaviour
                 return;
             }
 
-            lastAttackTime = Time.time;
 
+            /*
             if (Random.Range(0, 10) >= 3)
             {
                 return;
-            }
-            CharController robo = short_enemy.GetComponent<CharController>();
-            cat.attackRobo(short_enemy.transform.position, robo);
+            }*/
+
+            enemy.setCmd(EnemyScript.CMD.ATTACK);
+            
+        } else
+        {
+            enemy.setCmd(EnemyScript.CMD.PATROL);
         }
     }
 

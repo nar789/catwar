@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.AI;
+using DG.Tweening;
 
 public class CharController : MonoBehaviour
 {
@@ -13,28 +14,99 @@ public class CharController : MonoBehaviour
     bool isHit = false;
 
     CatCatcher catCatcher;
+    
+    SpriteRenderer renderer;
+
+    public Image batteryFill;
+    public TMPro.TextMeshProUGUI batteryText;
+    Color32 originBatteryColor;
+    Color32 attackedBatteryColor;
+    Color32 attackedBatteryTextColor;
+    Color32 attackedRoboColor;
+
+    public TMPro.TextMeshProUGUI hitText;
+
+    public Sprite[] sprites;
+    public int spriteIdx = 0;
+
+    public GameObject[] weapons;
+    public int weaponIdx = 0;
+    int lastWeaponIdx = 0;
+
 
 
     // Start is called before the first frame update
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        agent.updateRotation = false;
+        agent.updateUpAxis = false;
         catCatcher = GetComponent<CatCatcher>();
+        renderer = transform.GetChild(1).GetComponent<SpriteRenderer>();
+
+        originBatteryColor = new Color32(49, 149, 255, 255);
+        attackedBatteryColor = new Color32(176, 0, 77, 255);
+        attackedBatteryTextColor = new Color32(255, 64, 140, 255);
+        attackedRoboColor = new Color32(255, 155, 155, 255);
+
+        updateBatteryView(false);
+
+        hitText.text = "";
+    }
+
+    private void updateBatteryView(bool isAttack)
+    {
+        if(isAttack)
+        {
+            batteryFill.color = attackedBatteryColor;
+            batteryText.color = attackedBatteryTextColor;
+        } else
+        {
+            batteryFill.color = originBatteryColor;
+            batteryText.color = Color.white;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        updateSprite();
+        updateWeapon();
+    }
+
+
+
+    private void updateWeapon()
+    {
+        int idx = GameController.Instance.getMyWeaponIdx();
+        if (lastWeaponIdx == idx)
+        {
+            return;
+        }
+        weapons[lastWeaponIdx].SetActive(false);
+        weapons[idx].SetActive(true);
+        lastWeaponIdx = idx;
+    }
+
+
+    private void updateSprite()
+    {
+        int idx = GameController.Instance.getMySkinIdX();
+        Sprite sprite = GameController.Instance.getSkinSprite(idx);
+        if (renderer.sprite != sprite)
+        {
+            renderer.sprite = sprite;
+        }
     }
 
     private void FixedUpdate()
     {
+        /*
         if(isHit)
         {
             transform.Rotate(0, 50f * Time.deltaTime, 0);
             return;
-        }
+        }*/
 
 
         if(isMoving())
@@ -43,16 +115,24 @@ public class CharController : MonoBehaviour
             GameController.Instance.useBattery();
         }
 
+          if (!GameController.Instance.getIsManual() &&
+             (joystick.Horizontal != 0 || joystick.Vertical != 0))
+        {
+            GameController.Instance.onManualBtn();
+            return;
+        }
 
-        if(GameController.Instance.getIsCharger())
+
+        if (GameController.Instance.getIsCharger())
         {
             MoveToCharger();
         }
         else if (GameController.Instance.getIsManual())
         {
-            float speed = 7;
+            float alpha = GameController.Instance.getProfile(0) > 1 ? 6 : 3;
+            float speed = GameController.Instance.getProfile(0) * 0.33f + alpha;
             Vector3 moveDirection = new Vector3(-joystick.Horizontal, 0, -joystick.Vertical).normalized;
-            transform.LookAt(transform.position + moveDirection);
+            //transform.LookAt(transform.position + moveDirection);
             MoveAgent(moveDirection, speed);
         } else
         {
@@ -63,10 +143,12 @@ public class CharController : MonoBehaviour
     void MoveToCharger()
     {
         Vector3 targetPosition = GameController.Instance.getCharger().position;
-        transform.LookAt(targetPosition);
+        Debug.Log("getIsCharger " + targetPosition);
+        //transform.LookAt(targetPosition);
         NavMeshHit hit;
-        if (NavMesh.SamplePosition(targetPosition, out hit, 1.0f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(targetPosition, out hit, 2.0f, NavMesh.AllAreas))
         {
+            Debug.Log("hit " + hit.position);
             agent.SetDestination(hit.position);
         }
     }
@@ -81,7 +163,7 @@ public class CharController : MonoBehaviour
         }
 
         Vector3 targetPosition = GameController.Instance.getNextDust().position;
-        transform.LookAt(targetPosition);
+        //transform.LookAt(targetPosition);
         NavMeshHit hit;
         if (NavMesh.SamplePosition(targetPosition, out hit, 1.0f, NavMesh.AllAreas))
         {
@@ -136,19 +218,34 @@ public class CharController : MonoBehaviour
         return isHit;
     }
 
-    public void hit()
+    public void hit(int enemyAtk)
     {
         isHit = true;
-        GameController.Instance.showToast("현재 위치 파악중입니다.", 2);
+        //GameController.Instance.showToast("현재 위치 파악중입니다.", 2);
+        float def = ((float)(1000 - GameController.Instance.getDef()) / (float)1000f);
+        float power = enemyAtk * def;
+        if(GameController.Instance.getIsNight())
+        {
+            power = enemyAtk * 2 * def;
+        }
+        hitText.text = "-" + power;
+        hitText.transform.DOShakePosition(0.5f).OnComplete(() => {
+            hitText.text = "";
+            hitText.transform.localPosition = Vector3.zero;
+        });
+
+        GameController.Instance.useBatteryByAttack(power);
         StartCoroutine(malfunctionAndWait());
     }
 
     IEnumerator malfunctionAndWait()
     {
-        MeshRenderer renderer = GetComponent<MeshRenderer>();
-        renderer.material.SetColor("_BaseColor", Color.green);
-        yield return new WaitForSeconds(10);
-        renderer.material.SetColor("_BaseColor", Color.white);
+        batteryFill.color = 
+        renderer.material.color = attackedRoboColor;
+        updateBatteryView(true);
+        yield return new WaitForSeconds(1);
+        renderer.material.color = Color.white;
+        updateBatteryView(false);
         isHit = false;
     }
 

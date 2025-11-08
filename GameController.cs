@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using DG.Tweening;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -22,8 +23,46 @@ public class GameController : MonoBehaviour
 
 
     int[] dustCnt = { 1, 6, 10, 20, 50, 100, 200, 500, 700, 1 };
-    int[] ringCnt = { 3, 1, 2, 4, 10, 20, 40, 100, 140, 1 };
-    int[] dustArea = { 10, 10, 15, 20, 25, 30, 35, 40, 45, 50 };
+
+    int[] ringCnt = { 
+        3, 6, 9,
+        10, 10, 20,
+        40, 100, 140,
+        1, 3, 6,
+        9, 10, 10,
+        20, 40, 100,
+        140, 1, 3,
+        6, 9, 10,
+        10, 20, 40,
+        100, 140, 1};
+
+    int[] dustArea = { 
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25,
+        15, 20, 25
+    };
+
+    int[] catCnt = { 
+        2, 3, 4,
+        5, 5, 5,
+        7, 9, 10, 
+        20, 2, 3,
+        4, 5, 5,
+        5, 7, 9,
+        10, 20, 2,
+        3, 4, 5,
+        5, 5, 7,
+        9, 10, 20
+    };
+
+    int aliveCatCnt = 0;
 
     public GameObject chairPrefab;
     public GameObject dogPrefab;
@@ -43,8 +82,10 @@ public class GameController : MonoBehaviour
     float battery = 100f;
     int gold = 0;
 
-    int stage = 9;
-    float time = 0;
+    int stage = 0;
+    float time = 30;
+    float totalTime = 0;
+    int stageGold = 0;
 
     public TMPro.TextMeshProUGUI cleanRate;
     public TMPro.TextMeshProUGUI batteryText;
@@ -55,7 +96,8 @@ public class GameController : MonoBehaviour
     public GameObject[] panels;
     ScorePanel scorePanel;
     StatPanel statPanel;
-
+    StoragePanel storagePanel;
+    ShopPanel shopPanel;
     int[] profile = { 1, 1, 1};
     bool buySpeaker = false;
     public GameObject speakerBtn;
@@ -78,6 +120,56 @@ public class GameController : MonoBehaviour
     int surpriseCat = 0;
 
 
+    public AudioSource clickAudio;
+    public AudioSource winAudio;
+
+    public GameObject[] blockBuyingBtn;
+
+
+    int lastAudioIdx = -1;
+
+    bool isPause = false;
+
+    //packs start
+    bool isPowerCharger = false;
+    //packs end
+
+    CameraShake cameraShake;
+    public CanvasGroup darkFade;
+    bool isGameOver = false;
+    bool isNight = false;
+    public Light light;
+
+
+    public Sprite[] weaponSprites;
+    public Sprite[] skinSprites;
+
+    int skinIdx = 0;
+    int weaponIdx = 0;
+
+
+    int[] atk = { 10,11,13,14,16,   17, 19, 20, 22, 23,  25,26,28,29,31,  32,34,35,37,38,  40, 41,43,44, 46,  47,49};
+    int[] def = {300,322,344,366,388,  411,433,455,477,499,  522,544,566,588,610,  633,655,677,699,721,  744,766,788,810,832,  855,877 };
+    int[] dex1 = { 60,64,68,72,76,  80,84,88,92,96,  100,104,108,112,116,  120,124,128,132,136,  140,144,148,152,156,  160,170};
+    int[] dex2 = { 180,181,181,182,183,  184,184,185,186,187,  188,188,189,190,191,   192,192,193,194,195,   196,196,197,198,199,  200,200};
+    int[] enemyAtk = { 2, 3,4,2,3,  4,2,3,4,2,    3,4,2,3,3,   4,3,4,4,4,  4,4,4,4,4,  5,5,5};
+
+    int[] skinDia = { 0, 50, 100, 150, 200,   250, 300, 350, 400, 450,    500, 550, 600, 650, 700,    750, 800, 850, 900, 950,   1000, 1050, 1100, 1150, 1200,   1250, 1300};
+    int[] weaponDia = { 0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300 };
+
+
+    int dia = 12345;
+    public TMPro.TextMeshProUGUI diaText;
+
+
+    public class AssetData
+    {
+        public List<Vector2> assetList;
+    }
+
+    List<Vector2> myAssetList = new List<Vector2>();
+
+
 
 
     private void Awake()
@@ -96,7 +188,21 @@ public class GameController : MonoBehaviour
     {
 
         stage = DataHolder.selStage;
+        //stage = 30;
         Debug.Log("stage " + stage);
+
+        
+        levelObjectsGroup[0].SetActive(false);
+
+
+        //test
+        //PlayerPrefs.SetInt("speed", 1);
+        /*
+        PlayerPrefs.SetInt("speed", 1);
+        PlayerPrefs.SetInt("charge", 1);
+        PlayerPrefs.SetInt("battery", 1);
+        PlayerPrefs.SetInt("gold", 0);
+        */
 
         profile[0] = PlayerPrefs.GetInt("speed", 1);
         profile[1] = PlayerPrefs.GetInt("charge", 1);
@@ -105,16 +211,36 @@ public class GameController : MonoBehaviour
         buySpeaker = PlayerPrefs.GetInt("buySpeaker", 0) == 1;
         updateSkillBtn();
 
+        skinIdx = PlayerPrefs.GetInt("skin", 0);
+        weaponIdx = PlayerPrefs.GetInt("weapon", 0);
+
+        myAssetList.Add(new Vector2(1, 0));
+        myAssetList.Add(new Vector2(2, 0));
+
+        
+        /*
+        if(PlayerPrefs.HasKey("myAsset"))
+        {
+            string json = PlayerPrefs.GetString("myAsset");
+            AssetData data = JsonUtility.FromJson<AssetData>(json);
+            myAssetList = data.assetList;
+        }*/
+
+        //dia = PlayerPrefs.GetInt("dia", 0);
+
 
         robo = GameObject.Find("Robo");
         charController = robo.GetComponent<CharController>();
         agent = robo.GetComponent<NavMeshAgent>();
         scorePanel = panels[3].GetComponent<ScorePanel>();
         statPanel = panels[0].GetComponent<StatPanel>();
+        storagePanel = panels[1].GetComponent<StoragePanel>();
+        shopPanel = panels[2].GetComponent<ShopPanel>();
         updateDust();
         updateCleanRate(false);
         updateStage();
         updateGoldText();
+        updateDiaText();
         levelUpAgentSpeed();
 
         if (stage == 0)
@@ -122,18 +248,38 @@ public class GameController : MonoBehaviour
             showToast("귀여운 포자들을 \n 모조리 청소해보세요", 1);
         }
 
-        audio[UnityEngine.Random.Range(0, audio.Length)].Play();
+        lastAudioIdx = UnityEngine.Random.Range(0, audio.Length);
+        audio[lastAudioIdx].Play();
+
+        cameraShake = Camera.main.GetComponent<CameraShake>();
+        darkFade.alpha = 0;
     }
 
     // Update is called once per frame
     void Update()
     {
-        time += Time.deltaTime;
+        time -= Time.deltaTime;
+        totalTime += Time.deltaTime;
+        if(time < 1)
+        {
+            time = 30;
+            changeDayNight();
+        }
         updateTimeText();
+
+
+        #if UNITY_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            openPanel(5);
+        }
+        #endif
+    
     }
 
     public void onCleanBtn()
     {
+        clickAudio.Play();
         Debug.Log("on clean btn.");
         agent.ResetPath();
         isManual = false;
@@ -158,6 +304,7 @@ public class GameController : MonoBehaviour
 
     public void onManualBtn()
     {
+        clickAudio.Play();
         agent.ResetPath();
         isManual = true;
         isCharger = false;
@@ -176,6 +323,8 @@ public class GameController : MonoBehaviour
 
     public void onChargeBtn()
     {
+        clickAudio.Play();
+        isManual = true;
         isCharger = true;
         showToast("충전기로 돌아가유", 0);
     }
@@ -187,11 +336,18 @@ public class GameController : MonoBehaviour
         {
             chargeLed.SetActive(true);
             updateCharging();
+            isCharger = false;
+            agent.ResetPath();
         } else
         {
             chargeLed.SetActive(false);
         }
         return isCharger;
+    }
+
+    public bool isCharging()
+    {
+        return Vector3.Distance(robo.transform.position, charger.position) < 2f;
     }
 
     public void updateCharging()
@@ -202,9 +358,14 @@ public class GameController : MonoBehaviour
 
         Debug.Log("is charging...");
         if (battery < 100f)
-        {   
-            float weight = profile[1];
+        {
+            float weight = 30 + profile[1] * 0.33f;
+
             battery += Time.deltaTime * weight;
+            if (battery > 10f && Time.timeScale != 1f)
+            {
+                Time.timeScale = 1f;
+            }
             if (battery > 100f)
             {
                 battery = 100f;
@@ -235,7 +396,8 @@ public class GameController : MonoBehaviour
             removed += 1;
         }
 
-        float rate = (float)removed / (float)dust.Count * 100f;
+        //float rate = (float)removed / (float)dust.Count * 100f;
+        float rate = ((float)removed / (float)dust.Count) * 100f;
         string r = Mathf.Floor(rate).ToString();
         if (rate % 1 != 0)
         {
@@ -247,8 +409,8 @@ public class GameController : MonoBehaviour
         }
         cleanRate.text = r + "%";
 
-
-        if (rate == 100)
+        Debug.Log("rate " + rate + " / alive cat " + aliveCatCnt); 
+        if (aliveCatCnt == 0 && rate == 100 && time != 0 && catCnt[stage] <= dust.Count) //time 0 means game over 
         {
             win();
         }
@@ -265,7 +427,8 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("game win");
         showToast("스테이지 " + (stage + 1) + " 클리어", 0);
-        int maxStage = 10;
+        winAudio.Play();
+        int maxStage = 30;
         if (stage + 1 == maxStage)
         {
             //ending.
@@ -276,17 +439,18 @@ public class GameController : MonoBehaviour
             agent.ResetPath();
             agent.gameObject.transform.position = new Vector3(0, 0.5f, 0);
             cleanDustAndRings();
+            stageGold = 0;
             stage = 0;
             time = 0;
+            totalTime = 0;
             updateStage();
             updateDust();
             updateCleanRate(false);
             openPanel(4);
         } else
         {
-            //tests
-            scorePanel.setTime(time, dustCnt[stage]);
-            scorePanel.setCat(surpriseCat, stage);
+            scorePanel.setTime(totalTime, stageGold);
+            scorePanel.setCat(surpriseCat);
             openPanel(3);
         }
 
@@ -295,6 +459,15 @@ public class GameController : MonoBehaviour
 
     public void goToHome()
     {
+        SceneManager.LoadScene("Stage");
+    }
+
+    private void closeAllKillSeq()
+    {
+        if (clickAudio != null)
+        {
+            clickAudio.Play();
+        }
         DOTween.Clear();
         Time.timeScale = 1;
         if (toastSeq != null)
@@ -302,17 +475,17 @@ public class GameController : MonoBehaviour
             toastSeq.Kill();
             toastSeq = null;
         }
-        if(winSeq != null)
+        if (winSeq != null)
         {
             winSeq.Kill();
             winSeq = null;
         }
-        if(goldSeq != null)
+        if (goldSeq != null)
         {
             goldSeq.Kill();
             goldSeq = null;
         }
-        if(cleanRateSeq != null)
+        if (cleanRateSeq != null)
         {
             cleanRateSeq.Kill();
             cleanRateSeq = null;
@@ -322,10 +495,14 @@ public class GameController : MonoBehaviour
     public void gameOver()
     {
         Debug.Log("game over");
+        isGameOver = true;
+        shakeCamera();
         showToast("게임오버 \n 청소기 사망", 2);
         time = 0;
+        totalTime = 0;
+        stageGold = 0;
         updateTimeText();
-        battery = 100f;
+        battery = 15f;
         batteryText.text = battery.ToString("f2") + "%";
         batterySlider.value = battery;
         isCharger = false;
@@ -336,19 +513,27 @@ public class GameController : MonoBehaviour
         updateStage();
         updateDust();
         updateCleanRate(false);
-
+        fadeOut();
         //gold = 0;
 
     }
 
-
-    public void useBattery()
+    public void useBatteryByAttack(float power)
     {
-        float weight = 2.2f - (0.2f * profile[2]);
-        battery -= Time.deltaTime * weight;
-        if((battery <= 15f && battery > 14.4f) || (battery <= 5f && battery > 4.4f))
+        battery -= power;
+        if ((battery <= 15f && battery > 14.4f) || (battery <= 5f && battery > 4.4f))
         {
-            showToast("배터리가 없습니다. \n 충전기로 돌아가세요.", 2); 
+            showToast("배터리가 없습니다. \n 충전기로 돌아가세요.", 2);
+
+        }
+
+        if (battery <= 10f && Time.timeScale >= 1f)
+        {
+            Time.timeScale = 0.8f;
+        }
+        else if (battery > 10f && Time.timeScale != 1f)
+        {
+            Time.timeScale = 1f;
         }
 
         if (battery <= 0)
@@ -356,6 +541,48 @@ public class GameController : MonoBehaviour
             battery = 0;
             batteryText.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            Time.timeScale = 1f;
+            gameOver();
+            return;
+        }
+        else
+        {
+            batteryText.text = battery.ToString("f2") + "%";
+            batterySlider.value = battery;
+        }
+    }
+
+    private void blackOutAndGameOver()
+    {
+
+    }
+
+
+    public void useBattery()
+    {
+        float weight = 5.3f - (0.04f * profile[2]);
+        battery -= Time.deltaTime * weight;
+        if((battery <= 15f && battery > 14.4f) || (battery <= 5f && battery > 4.4f))
+        {
+            showToast("배터리가 없습니다. \n 충전기로 돌아가세요.", 2); 
+          
+        }
+
+        if (battery <= 10f && Time.timeScale >= 1f)
+        {
+            Time.timeScale = 0.8f;
+        }
+        else if (battery > 10f && Time.timeScale != 1f)
+        {
+            Time.timeScale = 1f;
+        }
+
+        if (battery <= 0)
+        {
+            battery = 0;
+            batteryText.text = battery.ToString("f2") + "%";
+            batterySlider.value = battery;
+            Time.timeScale = 1f;
             gameOver();
             return;
         } else
@@ -373,51 +600,91 @@ public class GameController : MonoBehaviour
 
     private void cleanDustAndRings()
     {
-        for (int i = 0; i < levelDustGroup[stage].transform.childCount; i++)
+        Debug.Log("levelDustGroup[stage].transform.childCount " + levelDustGroup[stage / 3].transform.childCount);
+        for (int i = 0; i < levelDustGroup[stage / 3].transform.childCount; i++)
         {
-            DestroyImmediate(levelDustGroup[stage].transform.GetChild(i).gameObject);
+            Destroy(levelDustGroup[stage / 3].transform.GetChild(i).gameObject);
         }
 
         for(int i=0;i<ringGroup.transform.childCount;i++)
         {
-            DestroyImmediate(ringGroup.transform.GetChild(i).gameObject);
+            Destroy(ringGroup.transform.GetChild(i).gameObject);
         }
     }
+
 
     public int getAreaLimit()
     {
         return stage < dustArea.Length ? dustArea[stage] : 50;
     }
 
+    public void generateDust(Vector3 enemyPos)
+    {
+        float limit = 3f;
+        float x = UnityEngine.Random.Range(enemyPos.x - limit, enemyPos.x + limit);
+        float z = UnityEngine.Random.Range(enemyPos.z - limit, enemyPos.z + limit);
+        var pos = new Vector3(x, 0, z);
+        GameObject dustObj = Instantiate(dustPrefab, pos, Quaternion.Euler(Vector3.zero), levelDustGroup[stage / 3].transform);
+        dust.Add(dustObj.transform);
+
+        updateCleanRate(false);
+
+        //var comparison = new Comparison<Transform>(CompareIntMethod);
+        //dust.Sort(comparison);
+    }
+
+
     private void updateDust()
     {
+        surpriseCat = 0;
         currentDustIdx = 0;
         if(stage - 1 >= 0)
         {
-            levelObjectsGroup[stage - 1].SetActive(false);
+            levelDustGroup[(stage - 1) / 3].SetActive(false);
+            levelObjectsGroup[(stage - 1)/3].SetActive(false);
         }
-        levelObjectsGroup[stage].SetActive(true);
-        levelDustGroup[stage].SetActive(true);
+        levelObjectsGroup[stage / 3].SetActive(true);
+        levelDustGroup[stage / 3].SetActive(true);
         dust.Clear();
+
+        /*
 
         for (int i = 0; i < dustCnt[stage]; i++)
         {
             int limit = stage < dustArea.Length ? dustArea[stage] : 50;
-            var x = UnityEngine.Random.Range(-limit, limit);
-            var z = UnityEngine.Random.Range(-limit, limit);
-            var pos = new Vector3(x, 0.5f, z);
-            Instantiate(dustPrefab, pos, Quaternion.Euler(new Vector3(-60f, 0, 0)), levelDustGroup[stage].transform);
-        }
+
+            var x = 0;
+            do
+            {
+                x = UnityEngine.Random.Range(-limit, limit);
+            } while (x < 5 && x > -5);
+            var z = 0;
+            do
+            {
+                z = UnityEngine.Random.Range(-limit, limit);
+            } while (z < 5 && z > -5);
+            var pos = new Vector3(x, 1f, z);
+            Instantiate(dustPrefab, pos, Quaternion.Euler(Vector3.zero), levelDustGroup[stage].transform);
+        }*/
 
         for (int i = 0; i < ringCnt[stage]; i++)
         {
             int limit = stage < dustArea.Length ? dustArea[stage] : 50;
-            var x = UnityEngine.Random.Range(-limit, limit);
-            var z = UnityEngine.Random.Range(-limit, limit);
+            var x = 0;
+            do
+            {
+                x = UnityEngine.Random.Range(-limit, limit);
+            } while (x < 5 && x > -5);
+            var z = 0;
+            do
+            {
+                z = UnityEngine.Random.Range(-limit, limit);
+            } while (z < 5 && z > -5);
             var pos = new Vector3(x, 0.6f, z);
             Instantiate(ringPrefab, pos, Quaternion.Euler(new Vector3(-20f, -45f, 0)), ringGroup.transform);
         }
 
+        /*
         for(int i=0;i<stage + 1;i++)
         {
             int limit = stage < dustArea.Length ? dustArea[stage] : 50;
@@ -435,26 +702,38 @@ public class GameController : MonoBehaviour
             var pos = new Vector3(x, 1f, z);
             Instantiate(dogPrefab, pos, Quaternion.Euler(new Vector3(0, UnityEngine.Random.Range(-90, 90), 0)), levelObjectsGroup[stage].transform);
         }
+        */
 
-        for (int i = 0; i < stage + 1; i++)
+        Debug.Log("cat cnt " + catCnt[stage]);
+        int[] staridx = {0, 3, 6, 9, 12, 14, 16, 19, 22, 25 };
+        
+        for (int i = 0; i < catCnt[stage]; i++)
         {
             int limit = stage < dustArea.Length ? dustArea[stage] : 50;
             var x = 0;
             do
             {
                 x = UnityEngine.Random.Range(-limit, limit);
-            } while (x < 5 && x > -5);
+            } while (x < 9 && x > -9);
             var z = 0;
             do
             {
                 z = UnityEngine.Random.Range(-limit, limit);
-            } while (z < 5 && z > -5);
+            } while (z < 9 && z > -9);
             var pos = new Vector3(x, 0, z);
-            int catIdx = UnityEngine.Random.Range(0, catPrefab.Length);
-            Instantiate(catPrefab[catIdx], pos, Quaternion.Euler(new Vector3(0, UnityEngine.Random.Range(-90, 90), 0)), levelObjectsGroup[stage].transform);
+            //int catIdx = UnityEngine.Random.Range(0, catPrefab.Length);
+            int cnt = stage/3 == 4 || stage/3 == 5 ? 2 : 3;
+            int start = staridx[stage/3];
+            int end = start + cnt;
+            int catIdx = UnityEngine.Random.Range(start, end);
+            Debug.Log(start + "~" + end + " / cat idx " + catIdx);
+            var obj = Instantiate(catPrefab[catIdx], pos, Quaternion.Euler(new Vector3(0, 0, 0)), levelDustGroup[stage/3].transform);
+            var enemy = obj.GetComponent<EnemyScript>();
+            enemy.setEnemyIdx(catIdx);
         }
+        aliveCatCnt = catCnt[stage];
 
-
+        /*
         for (int i = 0; i < stage + 1; i++)
         {
             int limit = stage < dustArea.Length ? dustArea[stage] : 50;
@@ -462,16 +741,17 @@ public class GameController : MonoBehaviour
             var z = UnityEngine.Random.Range(-limit, limit);
             var pos = new Vector3(x, 2.5f, z);
             Instantiate(sharkPrefab, pos, Quaternion.Euler(new Vector3(0, UnityEngine.Random.Range(-90, 90), 0)), levelObjectsGroup[stage].transform);
-        }
+        }*/
 
 
 
+        /*
         for (int i = 0; i < levelDustGroup[stage].transform.childCount; i++)
         {
             dust.Add(levelDustGroup[stage].transform.GetChild(i));
         }
         var comparison = new Comparison<Transform>(CompareIntMethod);
-        dust.Sort(comparison);
+        dust.Sort(comparison);*/
     }
 
     private static int CompareIntMethod(Transform a, Transform b)
@@ -483,6 +763,7 @@ public class GameController : MonoBehaviour
 
     public void nextStage()
     {
+        clickAudio.Play();
         Debug.Log("next stage.");
         closeAllPanel();
         isCharger = false;
@@ -492,6 +773,8 @@ public class GameController : MonoBehaviour
         cleanDustAndRings();
         stage += 1;
         time = 0;
+        totalTime = 0;
+        stageGold = 0;
         updateStage();
         updateDust();
         updateCleanRate(false);
@@ -505,13 +788,21 @@ public class GameController : MonoBehaviour
         {
             audio[i].Stop();
         }
-        audio[UnityEngine.Random.Range(0, audio.Length)].Play();
+        lastAudioIdx = UnityEngine.Random.Range(0, audio.Length);
+        audio[lastAudioIdx].Play();
 
     }
 
     public void closeAllPanel()
     {
-        Time.timeScale = 1f;
+        clickAudio.Play();
+
+        if (!isPause)
+        {
+            Time.timeScale = 1f;
+            playLastAudio();
+        }
+
         for (int i = 0; i < panels.Length; i++)
         {
             if (panels[i] != null && panels[i].transform.childCount > 1)
@@ -526,27 +817,29 @@ public class GameController : MonoBehaviour
             winSeq.Kill();
         }
 
+        
+
     }
 
     public void openPanel(int idx)
     {
+        clickAudio.Play();
         closeAllPanel();
         Time.timeScale = 0f;
         panels[idx].SetActive(true);
         if(idx == 2)
         {
-            speakerItem.SetActive(!buySpeaker);
+            //speakerItem.SetActive(!buySpeaker);
+            shopPanel.open();
         }
 
-        if(idx == 0)
+    
+        if (idx == 0)
         {
-            statPanel.updateGoldText();
-            statPanel.updateProfile();
-            statPanel.updatePrice();
+            statPanel.open();
         }
-        panels[idx].transform.GetChild(1).DOLocalMoveY(0, 1).SetUpdate(true);        
 
-        if(idx >= 3)
+        if (idx ==  3 || idx == 4)
         {
             var win = panels[idx].transform.GetChild(1).GetChild(0);
             if(winSeq != null)
@@ -567,6 +860,13 @@ public class GameController : MonoBehaviour
             comment.alpha = 0;
             comment.DOFade(1, 5).SetUpdate(true);
         }
+
+        if(idx == 1)
+        {
+            storagePanel.open();
+        }
+
+        panels[idx].transform.GetChild(1).DOLocalMoveY(0, 1).SetUpdate(true);
     }
 
     private void updateGoldText()
@@ -612,6 +912,11 @@ public class GameController : MonoBehaviour
         updateGoldText();
     }
 
+    public void updateStageGold(int earn)
+    {
+        stageGold += earn;
+    }
+
     public void earnGold(int earn)
     {
         gold += earn;
@@ -627,7 +932,7 @@ public class GameController : MonoBehaviour
 
     public bool levelUpProfile(int idx)
     {
-        if (profile[idx] + 1 <= 10)
+        if (profile[idx] + 1 <= 99)
         {
             profile[idx] += 1;
             if(idx ==0 )
@@ -650,8 +955,9 @@ public class GameController : MonoBehaviour
 
     public void levelUpAgentSpeed()
     {
-        agent.speed = profile[0] * 5;
-        agent.acceleration = profile[0] * 5;
+        float alpha = profile[0] > 1 ? 7 : 5;
+        agent.speed = profile[0] * 0.66f + alpha;
+        agent.acceleration = profile[0] * 0.66f + alpha;
         Debug.Log("agent speed " + agent.speed + " / acc " + agent.acceleration);
     }
 
@@ -690,20 +996,28 @@ public class GameController : MonoBehaviour
 
     public void onUpdateCameraZoom(int idx)
     {
-        int sz = 15;
+        clickAudio.Play();
+        int sz = 30;
         if (idx == 0)
         {
-            sz = 10;
-        }
-        else if (idx == 2)
-        {
-            if (Camera.main.orthographicSize == 30)
+            if (Camera.main.orthographicSize == 15)
             {
-                sz = 40;
+                sz = 10;
             }
             else
             {
-                sz = 30;
+                sz = 15;
+            }
+        }
+        else if (idx == 2)
+        {
+            if (Camera.main.orthographicSize == 40)
+            {
+                sz = 50;
+            }
+            else
+            {
+                sz = 40;
             }
         }
         Camera.main.orthographicSize = sz;
@@ -711,7 +1025,7 @@ public class GameController : MonoBehaviour
 
     private void OnDestroy()
     {
-        goToHome();
+        closeAllKillSeq();
     }
 
     public GameObject getRingCanvas()
@@ -721,6 +1035,7 @@ public class GameController : MonoBehaviour
 
     public void onSpeakerBtn()
     {
+        clickAudio.Play();
         charController.speaker();
     }
 
@@ -743,12 +1058,264 @@ public class GameController : MonoBehaviour
 
     void updateSkillBtn()
     {
-        speakerBtn.SetActive(buySpeaker);
-        speakerObj.SetActive(buySpeaker);
+        //speakerBtn.SetActive(buySpeaker);
+        //speakerObj.SetActive(buySpeaker);
     }
 
     public float getTime()
     {
         return time;
     }
+
+    public void playClickAudio()
+    {
+        clickAudio.Play();
+    }
+
+    public void tryToPurchase()
+    {
+        foreach(GameObject obj in blockBuyingBtn)
+        {
+            obj.SetActive(false);
+        }
+    }
+    public void finishBuying()
+    {
+        foreach (GameObject obj in blockBuyingBtn)
+        {
+            obj.SetActive(true);
+        }
+    }
+
+    public void playLastAudio()
+    {
+        if(!audio[lastAudioIdx].isPlaying)
+        {
+            audio[lastAudioIdx].Play();
+        }
+    }
+
+    public void pauseLastAudio()
+    {
+        if(audio[lastAudioIdx].isPlaying)
+        {
+            audio[lastAudioIdx].Pause();
+        }
+    }
+
+    public void setIsPause(bool status)
+    {
+        isPause = status;
+    }
+
+    public void shakeCamera()
+    {
+        cameraShake.TriggerShake();
+    }
+
+    public void fadeOut()
+    {
+        darkFade.gameObject.SetActive(true);
+        darkFade.alpha = 1;
+        darkFade.DOFade(0, 3).OnComplete(() =>
+        {
+            darkFade.alpha = 0;
+            darkFade.gameObject.SetActive(false);
+            isGameOver = false;
+        });
+    }
+
+    public bool getIsGameOver()
+    {
+        return isGameOver;
+    }
+
+    public bool getIsNight()
+    {
+        return isNight;
+    }
+
+    void changeDayNight()
+    {
+        if(isNight)
+        {
+            isNight = false;
+            //light.colorTemperature = 5536;
+            light.color = Color.white;
+        } else
+        {
+            isNight = true;
+            //light.colorTemperature = 20000;
+            light.color = new Color32(150, 150, 240, 255);
+        }
+    }
+
+    public void reduceAliveCatCnt()
+    {
+        aliveCatCnt -= 1;
+        if(aliveCatCnt < 0)
+        {
+            aliveCatCnt = 0;
+        }
+    }
+
+    public Sprite getWeaponSprite(int idx)
+    {
+        return weaponSprites[idx];
+    }
+
+    public Sprite getSkinSprite(int idx)
+    {
+        return skinSprites[idx];
+    }
+
+    public int getMySkinIdX()
+    {
+        return skinIdx;
+    }
+
+    public void setMySkinId(int _idx)
+    {
+        skinIdx = _idx;
+        PlayerPrefs.SetInt("skin", skinIdx);
+    }
+
+    public int getMyWeaponIdx()
+    {
+        return weaponIdx;
+    }
+
+    public void setMyWeaponIdx(int _idx)
+    {
+        weaponIdx = _idx;
+        PlayerPrefs.SetInt("weapon", weaponIdx);
+    }
+
+    public int getAtk(int _idx)
+    {
+        return atk[_idx];
+    }
+
+    public int getDef(int _idx)
+    {
+        return def[_idx];
+    }
+    
+    public string getDex(int _idx1, int _idx2)
+    {
+        return "" + dex1[_idx1] + "/" + dex2[_idx2];
+    }
+
+    public int getAtk()
+    {
+        if(weaponIdx >= atk.Length)
+        {
+            return atk[0];
+        }
+        return atk[weaponIdx];
+    }
+
+    public int getDef()
+    {
+        if(skinIdx >= def.Length)
+        {
+            return def[0];
+        }
+        return def[skinIdx];
+    }
+
+    public int getDex1(int _idx)
+    {
+        return dex1[_idx];
+    }
+
+    public int getDex2(int _idx)
+    {
+        return dex2[_idx];
+    }
+
+    public float getDex()
+    {
+        int a = 1;
+        int b = 10;
+        if(skinIdx >= dex1.Length)
+        {
+            a = dex1[0];
+        } else
+        {
+            a = dex1[skinIdx];
+        }
+        if(weaponIdx >= dex2.Length)
+        {
+            b = dex2[0];
+        } else
+        {
+            b = dex2[weaponIdx];
+        }
+        float ret = (float)a / (float)b;
+        return ret;
+    } 
+
+    public int getEnemyAtk(int idx)
+    {
+        if(idx >= enemyAtk.Length)
+        {
+            return enemyAtk[0];
+        }
+        return enemyAtk[idx];
+    }
+
+    public void setDia(int _dia)
+    {
+        dia = _dia;
+        PlayerPrefs.SetInt("dia", dia);
+    }
+
+    public int getDia()
+    {
+        return dia;
+    }
+
+    public void updateDiaText()
+    {
+        diaText.text = $"{dia:N0} DIA";
+    }
+
+    public int getSkinDia(int _idx)
+    {
+        return skinDia[_idx];
+    }
+
+    public int getWeaponDia(int _idx)
+    {
+        return weaponDia[_idx];
+    }
+
+    public void saveMyAsset(int type, int idx)
+    {
+        myAssetList.Add(new Vector2(type, idx));
+        AssetData data = new AssetData();
+        data.assetList = myAssetList;
+        string json = JsonUtility.ToJson(data);
+        PlayerPrefs.SetString("myAsset", json);
+        PlayerPrefs.Save();
+    }
+
+    public bool existInMyAsset(int type, int idx)
+    {
+        foreach(var item in myAssetList)
+        {
+            if(item.x == type && item.y == idx)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Vector2> getMyAssetList()
+    {
+        return myAssetList;
+    }
+
 }

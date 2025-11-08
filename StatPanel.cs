@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class StatPanel : MonoBehaviour
 {
@@ -13,19 +14,35 @@ public class StatPanel : MonoBehaviour
 
     public TMPro.TextMeshProUGUI[] priceText;
 
-    int[] price = { 0, 5000, 10000, 20000, 30000, 45000, 70000, 75000, 80000, 90000, 0};
+    int[] price = { 50, 100, 150, 200, 300, 450, 700, 750, 800, 900, 0};
+
+    public AudioSource levelUpAudio;
+
+
+    NavMeshAgent agent;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        
+  
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    public void open()
+    {
+        if(agent == null)
+        {
+            agent = GameObject.Find("Robo").GetComponent<NavMeshAgent>();
+            updateGoldText();
+            updateProfile();
+            updatePrice();
+        }
     }
 
 
@@ -36,9 +53,19 @@ public class StatPanel : MonoBehaviour
 
     public void updateProfile()
     {
-        speed.text = "Lv." + GameController.Instance.getProfile(0);
-        charge.text = "Lv." + GameController.Instance.getProfile(1);
-        battery.text = "Lv." + GameController.Instance.getProfile(2);
+
+        int lv1 = GameController.Instance.getProfile(0);
+        int value1 = (int)agent.acceleration * 1000;
+
+        int lv2 = GameController.Instance.getProfile(1);
+        int value2 = (int)(30 + lv2 * 0.33f * 1000);
+
+        int lv3 = GameController.Instance.getProfile(2);
+        int value3 = (int)(((0.04f * lv3) / 4) * 100);
+
+        speed.text = $"{value1:N0} (Lv{lv1})";
+        charge.text = $"{value2:N0} (Lv{lv2})";
+        battery.text = $"{value3:N0}% (Lv{lv3})";
     }
 
     public void updatePrice()
@@ -46,7 +73,7 @@ public class StatPanel : MonoBehaviour
         for(int i=0;i<3;i++)
         {
             int level = GameController.Instance.getProfile(i);
-            int pri = price[level];
+            int pri = price[level / 10];
             priceText[i].text = $"{pri:N0}G";
         }
     }
@@ -54,68 +81,86 @@ public class StatPanel : MonoBehaviour
 
     public void speedLevelUp()
     {
+        levelUpAudio.Play();
         int level = GameController.Instance.getProfile(0);
-        if (GameController.Instance.getGold() < price[level])
+        if (GameController.Instance.getGold() < price[level / 10])
         {
-            GameController.Instance.showToast("µ·ÀÌ ¸ðÀÚ¶ø´Ï´Ù.", 2);
+            GameController.Instance.showToast("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½Ï´ï¿½.", 2);
             return;
         }
+
+        
+
         if (GameController.Instance.levelUpProfile(0))
         {
-            int lv = GameController.Instance.getProfile(0);
-            speed.text = "Lv." + (lv + 1);
-            GameController.Instance.useGold(price[level]);
+            int lv1 = GameController.Instance.getProfile(0);
+            int value1 = (int)agent.acceleration * 1000;
+            speed.text = $"{value1:N0} (Lv{lv1})";
+            GameController.Instance.useGold(price[level / 10]);
             updateGoldText();
             GameController.Instance.levelUpAgentSpeed();
             updatePrice();
         } else
         {
-            GameController.Instance.showToast("ÃÖ´ë ·¹º§ÀÔ´Ï´Ù\n Æ÷ÀÚµéÀ» ¾µ¾îº¸¼¼¿ä", 0);
+            GameController.Instance.showToast("ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½\n ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½îº¸ï¿½ï¿½ï¿½ï¿½", 0);
         }
     }
 
     public void chargeLevelUp()
     {
+        levelUpAudio.Play();
+
         int level = GameController.Instance.getProfile(1);
-        if (GameController.Instance.getGold() < price[level])
+        if (GameController.Instance.getGold() < price[level / 10])
         {
-            GameController.Instance.showToast("µ·ÀÌ ¸ðÀÚ¶ø´Ï´Ù.", 2);
+            GameController.Instance.showToast("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½Ï´ï¿½.", 2);
             return;
         }
+
+        
+
         if (GameController.Instance.levelUpProfile(1))
         {
-            int lv = GameController.Instance.getProfile(1);
-            charge.text = "Lv." + (lv + 1);
-            GameController.Instance.useGold(price[level]);
+            int lv2 = GameController.Instance.getProfile(1);
+            int value2 = (int)(30 + lv2 * 0.33f * 1000);
+            charge.text = $"{value2:N0} (Lv{lv2})";
+            GameController.Instance.useGold(price[level / 10]);
             updateGoldText();
             updatePrice();
         }
         else
         {
-            GameController.Instance.showToast("ÃÖ´ë ·¹º§ÀÔ´Ï´Ù\n Æ÷ÀÚµéÀ» ¾µ¾îº¸¼¼¿ä", 0);
+            GameController.Instance.showToast("ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½\n ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½îº¸ï¿½ï¿½ï¿½ï¿½", 0);
         }
     }
 
     public void batteryLevelUp()
     {
+        levelUpAudio.Play();
+
+
         int level = GameController.Instance.getProfile(2);
-        Debug.Log("gold " + GameController.Instance.getGold() + " / " + price[level]);
-        if (GameController.Instance.getGold() < price[level])
+        Debug.Log("gold " + GameController.Instance.getGold() + " / " + price[level / 10]);
+        if (GameController.Instance.getGold() < price[level / 10])
         {
-            GameController.Instance.showToast("µ·ÀÌ ¸ðÀÚ¶ø´Ï´Ù.", 2);
+            GameController.Instance.showToast("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½Ï´ï¿½.", 2);
             return;
         }
+
+        
+
         if (GameController.Instance.levelUpProfile(2))
         {
-            int lv = GameController.Instance.getProfile(2);
-            battery.text = "Lv." + (lv + 1);
-            GameController.Instance.useGold(price[level]);
+            int lv3 = GameController.Instance.getProfile(2);
+            int value3 = (int)(((0.04f * lv3) / 4) * 100);
+            battery.text = $"{value3:N0}% (Lv{lv3})";
+            GameController.Instance.useGold(price[level / 10]);
             updateGoldText();
             updatePrice();
         }
         else
         {
-            GameController.Instance.showToast("ÃÖ´ë ·¹º§ÀÔ´Ï´Ù\n Æ÷ÀÚµéÀ» ¾µ¾îº¸¼¼¿ä", 0);
+            GameController.Instance.showToast("ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½\n ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½îº¸ï¿½ï¿½ï¿½ï¿½", 0);
         }
     }
 
