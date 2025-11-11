@@ -18,7 +18,9 @@ public class CharController : MonoBehaviour
     SpriteRenderer renderer;
 
     public Image batteryFill;
+    public Image batteryFill2;
     public TMPro.TextMeshProUGUI batteryText;
+    public TMPro.TextMeshProUGUI batteryText2;
     Color32 originBatteryColor;
     Color32 attackedBatteryColor;
     Color32 attackedBatteryTextColor;
@@ -32,6 +34,10 @@ public class CharController : MonoBehaviour
     public GameObject[] weapons;
     public int weaponIdx = 0;
     int lastWeaponIdx = 0;
+
+    public WeaponRotater rotater;
+
+    float rotateLastTime = 0f;
 
 
 
@@ -60,10 +66,14 @@ public class CharController : MonoBehaviour
         {
             batteryFill.color = attackedBatteryColor;
             batteryText.color = attackedBatteryTextColor;
+            batteryFill2.color = attackedBatteryColor;
+            batteryText2.color = attackedBatteryTextColor;
         } else
         {
             batteryFill.color = originBatteryColor;
             batteryText.color = Color.white;
+            batteryFill2.color = originBatteryColor;
+            batteryText2.color = Color.white;
         }
     }
 
@@ -107,6 +117,12 @@ public class CharController : MonoBehaviour
             transform.Rotate(0, 50f * Time.deltaTime, 0);
             return;
         }*/
+        if(rotateLastTime != 0 && Time.time - rotateLastTime > 1f)
+        {
+            stopWeaponRotate();
+            rotateLastTime = 0;
+        }
+
 
 
         if(isMoving())
@@ -220,6 +236,7 @@ public class CharController : MonoBehaviour
 
     public void hit(int enemyAtk)
     {
+        GameController.Instance.playHitRobotAudio();
         isHit = true;
         //GameController.Instance.showToast("현재 위치 파악중입니다.", 2);
         float def = ((float)(1000 - GameController.Instance.getDef()) / (float)1000f);
@@ -242,6 +259,8 @@ public class CharController : MonoBehaviour
     {
         batteryFill.color = 
         renderer.material.color = attackedRoboColor;
+        batteryFill2.color =
+        renderer.material.color = attackedRoboColor;
         updateBatteryView(true);
         yield return new WaitForSeconds(1);
         renderer.material.color = Color.white;
@@ -256,6 +275,17 @@ public class CharController : MonoBehaviour
         GetComponent<Renderer>().material.SetColor("_BaseColor", Color.white);
         isHit = false;
         catCatcher.speaker();
+    }
+
+    public void startWeaponRotate()
+    {
+        rotateLastTime = Time.time;
+        rotater.startRotate();
+    }
+
+    public void stopWeaponRotate()
+    {
+        rotater.stopRotate();
     }
 
 }

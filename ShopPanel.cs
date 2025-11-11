@@ -76,7 +76,8 @@ public class ShopPanel : MonoBehaviour
     }
 
     public void onClickBtn()
-    { 
+    {
+        GameController.Instance.playClickAudio();
         Debug.Log("shop onClickBtn ");
         GameController.Instance.tryToPurchase();
     }
@@ -126,6 +127,7 @@ public class ShopPanel : MonoBehaviour
 
     public void setFilter(int filterType)
     {
+        GameController.Instance.playClickAudio();
         GameObject[] containers = { containerSkin, containerWeapon };
         for (int i = 0; i < 2; i++)
         {
@@ -138,6 +140,7 @@ public class ShopPanel : MonoBehaviour
 
     public void openBuyItemDialog(int type, int idx)
     {
+        GameController.Instance.playClickAudio();
         opendBuyItemType = type;
         opendBuyItemIdx = idx;
 
@@ -163,7 +166,7 @@ public class ShopPanel : MonoBehaviour
             buyItemDia.text = $"{GameController.Instance.getWeaponDia(idx):N0}";
         }
 
-        buyItemName.text = "asdf";
+        buyItemName.text = (type == 1) ? GameController.Instance.getSkinName(idx) : GameController.Instance.getWeaponName(idx);
 
         if(GameController.Instance.existInMyAsset(type, idx))
         {
@@ -189,6 +192,7 @@ public class ShopPanel : MonoBehaviour
 
     public void buyItem()
     {
+        Debug.Log("buyItem " + opendBuyItemType + " / " + opendBuyItemIdx);
         int diaAmount = 0;
         if(opendBuyItemType == 1)
         {
@@ -202,6 +206,7 @@ public class ShopPanel : MonoBehaviour
         if (myDia < diaAmount)
         {
             GameController.Instance.showToast("다이아가 모자랍니다.", 2);
+            return;
         } else
         {
             myDia -= diaAmount;
@@ -211,10 +216,12 @@ public class ShopPanel : MonoBehaviour
 
             GameController.Instance.saveMyAsset(opendBuyItemType, opendBuyItemIdx);
             storagePanel.reload();
+            string name = (opendBuyItemType == 1) ? GameController.Instance.getSkinName(opendBuyItemIdx) : GameController.Instance.getWeaponName(opendBuyItemIdx);
+            GameController.Instance.showToast("[" + name + "] 구매 성공!", 1);
+            GameController.Instance.playWinAudio();
         }
 
         closeBuyItemPanel();
-        GameController.Instance.showToast("[asdf] 구매 성공!", 1);
     }
 
 
@@ -228,6 +235,7 @@ public class ShopPanel : MonoBehaviour
         updateDiaText();
         GameController.Instance.showToast("다이아 100개가 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
+        GameController.Instance.playWinAudio();
     }
 
 
@@ -239,8 +247,9 @@ public class ShopPanel : MonoBehaviour
         GameController.Instance.setDia(myDia);
         GameController.Instance.updateDiaText();
         updateDiaText();
-        GameController.Instance.showToast("다이아 100개가 증정되었습니다!", 1);
+        GameController.Instance.showToast("다이아 300개가 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
+        GameController.Instance.playWinAudio();
     }
 
 
@@ -252,8 +261,9 @@ public class ShopPanel : MonoBehaviour
         GameController.Instance.setDia(myDia);
         GameController.Instance.updateDiaText();
         updateDiaText();
-        GameController.Instance.showToast("다이아 100개가 증정되었습니다!", 1);
+        GameController.Instance.showToast("다이아 500개가 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
+        GameController.Instance.playWinAudio();
     }
 
 
@@ -266,8 +276,9 @@ public class ShopPanel : MonoBehaviour
         GameController.Instance.setDia(myDia);
         GameController.Instance.updateDiaText();
         updateDiaText();
-        GameController.Instance.showToast("다이아 100개가 증정되었습니다!", 1);
+        GameController.Instance.showToast("다이아 1000개가 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
+        GameController.Instance.playWinAudio();
     }
 
     public void buyStarterPack()
@@ -289,6 +300,7 @@ public class ShopPanel : MonoBehaviour
 
         GameController.Instance.showToast("스타터팩이 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
+        GameController.Instance.playWinAudio();
     }
 
 }

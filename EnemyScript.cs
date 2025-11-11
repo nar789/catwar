@@ -107,12 +107,14 @@ public class EnemyScript : MonoBehaviour
 
         if(cmd == CMD.ATTACK)
         {
+            charController.startWeaponRotate();
+
             if (Vector3.Distance(transform.position, robo.position) > 4f)
             {
                 MoveToDest(robo.position);
             }
             else
-            {
+            {    
                 agent.velocity = Vector3.zero;
                 agent.ResetPath();
             }
@@ -201,6 +203,7 @@ public class EnemyScript : MonoBehaviour
 
     private void hitHp()
     {
+        GameController.Instance.playHitAudio();
         int roboPower = GameController.Instance.getAtk();
         hitText.text = roboPower + "";
         hitText.transform.DOShakePosition(0.5f).OnComplete(() => {

@@ -34,8 +34,11 @@ public class Stage : MonoBehaviour
 
     void Start()
     {
-        //stage = PlayerPrefs.GetInt("stage", 0);
-        stage = 29;
+        stage = PlayerPrefs.GetInt("stage", 0);
+        
+        //test
+        //stage = 29;
+
         DataHolder.selStage = stage;
         roomNameText.text = roomName[stage / 3];
     }
@@ -78,7 +81,7 @@ public class Stage : MonoBehaviour
 
     public void onClickStage(int idx)
     {
-        if(idx <= stage)
+        if (idx <= stage)
         {
             DataHolder.selStage = idx;
             roomNameText.text = roomName[idx / 3];

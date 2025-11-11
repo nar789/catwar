@@ -28,13 +28,13 @@ public class GameController : MonoBehaviour
         3, 6, 9,
         10, 10, 20,
         40, 100, 140,
-        1, 3, 6,
-        9, 10, 10,
-        20, 40, 100,
-        140, 1, 3,
-        6, 9, 10,
-        10, 20, 40,
-        100, 140, 1};
+        40, 100, 140,
+        40, 100, 140,
+        40, 100, 140,
+        40, 100, 140,
+        40, 100, 140,
+        40, 100, 140,
+        40, 100, 140};
 
     int[] dustArea = { 
         15, 20, 25,
@@ -50,17 +50,32 @@ public class GameController : MonoBehaviour
     };
 
     int[] catCnt = { 
-        2, 3, 4,
-        5, 5, 5,
-        7, 9, 10, 
-        20, 2, 3,
-        4, 5, 5,
-        5, 7, 9,
-        10, 20, 2,
-        3, 4, 5,
-        5, 5, 7,
-        9, 10, 20
+        5, 7, 10,
+        5, 7, 10,
+        5, 7, 10, 
+        5, 7, 10,
+        7, 10, 20,
+        7, 10, 20,
+        7, 10, 20,
+        7, 10, 20,
+        7, 10, 20,
+        7, 10, 20
     };
+
+    int[] catMultiply =
+    {
+        2, 3, 3,
+        3, 3, 3,
+        3, 3, 3,
+        3, 3, 3,
+        5, 5, 5,
+        5, 5, 5,
+        5, 5, 5,
+        5, 5, 5,
+        5, 5, 5,
+        5, 5, 5
+    };
+    int currentCatMultiply = 5;
 
     int aliveCatCnt = 0;
 
@@ -88,7 +103,9 @@ public class GameController : MonoBehaviour
     int stageGold = 0;
 
     public TMPro.TextMeshProUGUI cleanRate;
+    public TMPro.TextMeshProUGUI cleanRate2;
     public TMPro.TextMeshProUGUI batteryText;
+    public TMPro.TextMeshProUGUI batteryText2;
     public TMPro.TextMeshProUGUI stageText;
     public TMPro.TextMeshProUGUI goldText;
     public TMPro.TextMeshProUGUI timeText;
@@ -111,10 +128,12 @@ public class GameController : MonoBehaviour
     Sequence winSeq;
     Sequence goldSeq;
     Sequence cleanRateSeq;
+    Sequence cleanRateNotiferSeq;
 
     public AudioSource[] audio;
 
     public Slider batterySlider;
+    public Slider batterySlider2;
 
 
     int surpriseCat = 0;
@@ -122,6 +141,8 @@ public class GameController : MonoBehaviour
 
     public AudioSource clickAudio;
     public AudioSource winAudio;
+    public AudioSource hitAudio;
+    public AudioSource hitRobotAudio;
 
     public GameObject[] blockBuyingBtn;
 
@@ -158,8 +179,20 @@ public class GameController : MonoBehaviour
     int[] weaponDia = { 0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300 };
 
 
-    int dia = 12345;
+    string[] skinName = { "기본파랭이", "야구공", "곰도리", "도도한꿀벌", "견고한꿀벌", "체리케이크", "냥냥이", "치즈케이크", "태엽이", "공사장",
+    "만두한판", "안드로이드", "바둑이", "도넛츠", "덕덕이", "코가손", "활활이", "갸꾸리", "버거왕", "호기심많은키위",
+    "LP판", "팝코니", "에일리언", "라이징스타", "딸기딸기", "용감한유니콘", "초월한나무"};
+
+    string[] weaponName = {"기본뽕뿅이", "꿀펀치", "붕어빵", "단검", "돌도끼", "톱날", "양손도끼", "날카로운낫", "장검", "아이스바",
+    "거대톱날", "폭탄", "축복받은검", "마법지팡이", "할로윈펌킨", "할로윈낫", "할로윈지팡이", "할로윈봉", "마력단검", "전설의장검",
+    "전설의도끼", "전설의망치", "전설의단검", "용신검", "용신도끼", "용신망치", "용신봉"};
+
+
+
+    int dia = 0;
     public TMPro.TextMeshProUGUI diaText;
+
+    public CanvasGroup cleanRateNotifier;
 
 
     public class AssetData
@@ -195,14 +228,24 @@ public class GameController : MonoBehaviour
         levelObjectsGroup[0].SetActive(false);
 
 
-        //test
-        //PlayerPrefs.SetInt("speed", 1);
+        //test        
         /*
         PlayerPrefs.SetInt("speed", 1);
         PlayerPrefs.SetInt("charge", 1);
         PlayerPrefs.SetInt("battery", 1);
+        PlayerPrefs.SetInt("gold", 500);
+        PlayerPrefs.SetInt("dia", 0);
+        PlayerPrefs.DeleteKey("myAsset");
+        PlayerPrefs.SetInt("skin", 0);
+        PlayerPrefs.SetInt("weapon", 0);*/
+
+        //test2
+        /*
         PlayerPrefs.SetInt("gold", 0);
-        */
+        PlayerPrefs.SetInt("speed", 30);
+        PlayerPrefs.SetInt("charge", 30);
+        PlayerPrefs.SetInt("battery", 30);*/
+
 
         profile[0] = PlayerPrefs.GetInt("speed", 1);
         profile[1] = PlayerPrefs.GetInt("charge", 1);
@@ -218,15 +261,14 @@ public class GameController : MonoBehaviour
         myAssetList.Add(new Vector2(2, 0));
 
         
-        /*
         if(PlayerPrefs.HasKey("myAsset"))
         {
             string json = PlayerPrefs.GetString("myAsset");
             AssetData data = JsonUtility.FromJson<AssetData>(json);
             myAssetList = data.assetList;
-        }*/
+        }
 
-        //dia = PlayerPrefs.GetInt("dia", 0);
+        dia = PlayerPrefs.GetInt("dia", 0);
 
 
         robo = GameObject.Find("Robo");
@@ -245,7 +287,7 @@ public class GameController : MonoBehaviour
 
         if (stage == 0)
         {
-            showToast("귀여운 포자들을 \n 모조리 청소해보세요", 1);
+            showToast("스탯을 먼저 올려보세요.", 1);
         }
 
         lastAudioIdx = UnityEngine.Random.Range(0, audio.Length);
@@ -271,6 +313,18 @@ public class GameController : MonoBehaviour
         #if UNITY_ANDROID
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+
+            if(panels[0].activeSelf || panels[1].activeSelf || panels[2].activeSelf || panels[5].activeSelf)
+            {
+                closeAllPanel();
+                return;
+            }
+
+            if (panels[3].activeSelf || panels[4].activeSelf)
+            {
+                return;
+            }
+
             openPanel(5);
         }
         #endif
@@ -371,7 +425,9 @@ public class GameController : MonoBehaviour
                 battery = 100f;
             }
             batteryText.text = battery.ToString("f2") + "%";
+            batteryText2.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            batterySlider2.value = battery;
         }
     }
 
@@ -408,16 +464,26 @@ public class GameController : MonoBehaviour
             r = "0";
         }
         cleanRate.text = r + "%";
+        cleanRate2.text = r + "%";
 
         Debug.Log("rate " + rate + " / alive cat " + aliveCatCnt); 
-        if (aliveCatCnt == 0 && rate == 100 && time != 0 && catCnt[stage] <= dust.Count) //time 0 means game over 
+        if (aliveCatCnt == 0 && currentCatMultiply == 0 && rate == 100 && time != 0 && catCnt[stage] <= dust.Count) //time 0 means game over 
         {
+            if(cleanRateNotifier.gameObject.activeSelf)
+            {
+                cleanRateNotifier.alpha = 0;
+                cleanRateNotifier.gameObject.SetActive(false);
+            }
             win();
+        } else if(force)
+        {
+            updateCleanRateNotifier();
         }
-
+        
         if(force)
         {
             shakeAnimation(cleanRate.gameObject, cleanRateSeq);
+            
         }
 
     }
@@ -490,6 +556,11 @@ public class GameController : MonoBehaviour
             cleanRateSeq.Kill();
             cleanRateSeq = null;
         }
+        if(cleanRateNotiferSeq != null)
+        {
+            cleanRateNotiferSeq.Kill();
+            cleanRateNotiferSeq = null;
+        }
     }
 
     public void gameOver()
@@ -502,9 +573,11 @@ public class GameController : MonoBehaviour
         totalTime = 0;
         stageGold = 0;
         updateTimeText();
-        battery = 15f;
+        battery = 25f;
         batteryText.text = battery.ToString("f2") + "%";
+        batteryText2.text = battery.ToString("f2") + "%";
         batterySlider.value = battery;
+        batterySlider2.value = battery;
         isCharger = false;
         isManual = true;
         agent.ResetPath();
@@ -540,7 +613,9 @@ public class GameController : MonoBehaviour
         {
             battery = 0;
             batteryText.text = battery.ToString("f2") + "%";
+            batteryText2.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            batterySlider2.value = battery;
             Time.timeScale = 1f;
             gameOver();
             return;
@@ -548,7 +623,9 @@ public class GameController : MonoBehaviour
         else
         {
             batteryText.text = battery.ToString("f2") + "%";
+            batteryText2.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            batterySlider2.value = battery;
         }
     }
 
@@ -581,14 +658,18 @@ public class GameController : MonoBehaviour
         {
             battery = 0;
             batteryText.text = battery.ToString("f2") + "%";
+            batteryText2.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            batterySlider2.value = battery;
             Time.timeScale = 1f;
             gameOver();
             return;
         } else
         {
             batteryText.text = battery.ToString("f2") + "%";
+            batteryText2.text = battery.ToString("f2") + "%";
             batterySlider.value = battery;
+            batterySlider2.value = battery;
         }
 
     }
@@ -597,6 +678,9 @@ public class GameController : MonoBehaviour
     {
         stageText.text = "" + (stage + 1);
     }
+
+
+
 
     private void cleanDustAndRings()
     {
@@ -631,6 +715,38 @@ public class GameController : MonoBehaviour
 
         //var comparison = new Comparison<Transform>(CompareIntMethod);
         //dust.Sort(comparison);
+    }
+
+    private void appendCat()
+    {
+        Debug.Log("cat cnt " + catCnt[stage]);
+        int[] staridx = { 0, 3, 6, 9, 12, 14, 16, 19, 22, 25 };
+
+        for (int i = 0; i < catCnt[stage]; i++)
+        {
+            int limit = stage < dustArea.Length ? dustArea[stage] : 50;
+            var x = 0;
+            do
+            {
+                x = UnityEngine.Random.Range(-limit, limit);
+            } while (x < 9 && x > -9);
+            var z = 0;
+            do
+            {
+                z = UnityEngine.Random.Range(-limit, limit);
+            } while (z < 9 && z > -9);
+            var pos = new Vector3(x, 0, z);
+            //int catIdx = UnityEngine.Random.Range(0, catPrefab.Length);
+            int cnt = stage / 3 == 4 || stage / 3 == 5 ? 2 : 3;
+            int start = staridx[stage / 3];
+            int end = start + cnt;
+            int catIdx = UnityEngine.Random.Range(start, end);
+            Debug.Log(start + "~" + end + " / cat idx " + catIdx);
+            var obj = Instantiate(catPrefab[catIdx], pos, Quaternion.Euler(new Vector3(0, 0, 0)), levelDustGroup[stage / 3].transform);
+            var enemy = obj.GetComponent<EnemyScript>();
+            enemy.setEnemyIdx(catIdx);
+        }
+        aliveCatCnt = catCnt[stage];
     }
 
 
@@ -704,34 +820,9 @@ public class GameController : MonoBehaviour
         }
         */
 
-        Debug.Log("cat cnt " + catCnt[stage]);
-        int[] staridx = {0, 3, 6, 9, 12, 14, 16, 19, 22, 25 };
+        appendCat();
+        currentCatMultiply = catMultiply[stage];
         
-        for (int i = 0; i < catCnt[stage]; i++)
-        {
-            int limit = stage < dustArea.Length ? dustArea[stage] : 50;
-            var x = 0;
-            do
-            {
-                x = UnityEngine.Random.Range(-limit, limit);
-            } while (x < 9 && x > -9);
-            var z = 0;
-            do
-            {
-                z = UnityEngine.Random.Range(-limit, limit);
-            } while (z < 9 && z > -9);
-            var pos = new Vector3(x, 0, z);
-            //int catIdx = UnityEngine.Random.Range(0, catPrefab.Length);
-            int cnt = stage/3 == 4 || stage/3 == 5 ? 2 : 3;
-            int start = staridx[stage/3];
-            int end = start + cnt;
-            int catIdx = UnityEngine.Random.Range(start, end);
-            Debug.Log(start + "~" + end + " / cat idx " + catIdx);
-            var obj = Instantiate(catPrefab[catIdx], pos, Quaternion.Euler(new Vector3(0, 0, 0)), levelDustGroup[stage/3].transform);
-            var enemy = obj.GetComponent<EnemyScript>();
-            enemy.setEnemyIdx(catIdx);
-        }
-        aliveCatCnt = catCnt[stage];
 
         /*
         for (int i = 0; i < stage + 1; i++)
@@ -909,6 +1000,7 @@ public class GameController : MonoBehaviour
     {
         gold -= use;
         PlayerPrefs.SetInt("gold", gold);
+        PlayerPrefs.Save();
         updateGoldText();
     }
 
@@ -921,9 +1013,13 @@ public class GameController : MonoBehaviour
     {
         gold += earn;
         PlayerPrefs.SetInt("gold", gold);
+        PlayerPrefs.Save();
         updateGoldText();
+        panels[0].GetComponent<StatPanel>().updateGoldText();
         shakeAnimation(goldText.gameObject, goldSeq);
     }
+
+
 
     public int getProfile(int idx)
     {
@@ -945,6 +1041,7 @@ public class GameController : MonoBehaviour
             {
                 PlayerPrefs.SetInt("battery", profile[2]);
             }
+            PlayerPrefs.Save();
             return true;
 
         } else
@@ -1157,6 +1254,16 @@ public class GameController : MonoBehaviour
         {
             aliveCatCnt = 0;
         }
+        if(aliveCatCnt == 0 && currentCatMultiply != 0)
+        {
+            currentCatMultiply -= 1;
+            if(currentCatMultiply > 0)
+            {
+                showToast((catMultiply[stage] - currentCatMultiply + 1) + " of " + catMultiply[stage] + " 라운드", 0);
+                appendCat();
+            }
+        }
+        Debug.Log("aliveCatCnt " + aliveCatCnt + " / " + currentCatMultiply);
     }
 
     public Sprite getWeaponSprite(int idx)
@@ -1298,7 +1405,6 @@ public class GameController : MonoBehaviour
         data.assetList = myAssetList;
         string json = JsonUtility.ToJson(data);
         PlayerPrefs.SetString("myAsset", json);
-        PlayerPrefs.Save();
     }
 
     public bool existInMyAsset(int type, int idx)
@@ -1316,6 +1422,45 @@ public class GameController : MonoBehaviour
     public List<Vector2> getMyAssetList()
     {
         return myAssetList;
+    }
+
+    public void updateCleanRateNotifier()
+    {
+        if(cleanRateNotiferSeq != null)
+        {
+            cleanRateNotiferSeq.Kill();
+        }
+        cleanRateNotifier.gameObject.SetActive(true);
+        cleanRateNotifier.alpha = 0;
+        cleanRateNotiferSeq = DOTween.Sequence();
+        cleanRateNotiferSeq.Append(cleanRateNotifier.DOFade(0.6f, 1))
+            .Append(cleanRateNotifier.DOFade(0, 0.5f)).OnComplete(() => {
+                cleanRateNotifier.gameObject.SetActive(false);
+            });
+    }
+
+    public string getSkinName(int _idx)
+    {
+        return skinName[_idx];
+    }
+
+    public string getWeaponName(int _idx)
+    {
+        return weaponName[_idx];
+    }
+
+    public void playHitAudio()
+    {
+        hitAudio.Play();
+    }
+    public void playHitRobotAudio()
+    {
+        hitRobotAudio.Play();
+    }
+
+    public void playWinAudio()
+    {
+        winAudio.Play();
     }
 
 }

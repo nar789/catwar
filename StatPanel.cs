@@ -83,9 +83,10 @@ public class StatPanel : MonoBehaviour
     {
         levelUpAudio.Play();
         int level = GameController.Instance.getProfile(0);
-        if (GameController.Instance.getGold() < price[level / 10])
+        int gold = price[level / 10];
+        if (GameController.Instance.getGold() < gold)
         {
-            GameController.Instance.showToast("���� ���ڶ��ϴ�.", 2);
+            GameController.Instance.showToast("돈이 모자랍니다.", 2);
             return;
         }
 
@@ -93,16 +94,16 @@ public class StatPanel : MonoBehaviour
 
         if (GameController.Instance.levelUpProfile(0))
         {
+            GameController.Instance.useGold(gold);
+            updateGoldText();
             int lv1 = GameController.Instance.getProfile(0);
             int value1 = (int)agent.acceleration * 1000;
             speed.text = $"{value1:N0} (Lv{lv1})";
-            GameController.Instance.useGold(price[level / 10]);
-            updateGoldText();
             GameController.Instance.levelUpAgentSpeed();
             updatePrice();
         } else
         {
-            GameController.Instance.showToast("�ִ� �����Դϴ�\n ���ڵ��� �������", 0);
+            GameController.Instance.showToast("최대 레벨입니다\n 먼지들을 쓸어보세요", 0);
         }
     }
 
@@ -111,9 +112,10 @@ public class StatPanel : MonoBehaviour
         levelUpAudio.Play();
 
         int level = GameController.Instance.getProfile(1);
-        if (GameController.Instance.getGold() < price[level / 10])
+        int gold = price[level / 10];
+        if (GameController.Instance.getGold() < gold)
         {
-            GameController.Instance.showToast("���� ���ڶ��ϴ�.", 2);
+            GameController.Instance.showToast("돈이 모자랍니다.", 2);
             return;
         }
 
@@ -121,16 +123,16 @@ public class StatPanel : MonoBehaviour
 
         if (GameController.Instance.levelUpProfile(1))
         {
+            GameController.Instance.useGold(gold);
+            updateGoldText();
             int lv2 = GameController.Instance.getProfile(1);
             int value2 = (int)(30 + lv2 * 0.33f * 1000);
             charge.text = $"{value2:N0} (Lv{lv2})";
-            GameController.Instance.useGold(price[level / 10]);
-            updateGoldText();
             updatePrice();
         }
         else
         {
-            GameController.Instance.showToast("�ִ� �����Դϴ�\n ���ڵ��� �������", 0);
+            GameController.Instance.showToast("최대 레벨입니다\n 먼지들을 쓸어보세요", 0);
         }
     }
 
@@ -140,10 +142,10 @@ public class StatPanel : MonoBehaviour
 
 
         int level = GameController.Instance.getProfile(2);
-        Debug.Log("gold " + GameController.Instance.getGold() + " / " + price[level / 10]);
-        if (GameController.Instance.getGold() < price[level / 10])
+        int gold = price[level / 10];
+        if (GameController.Instance.getGold() < gold)
         {
-            GameController.Instance.showToast("���� ���ڶ��ϴ�.", 2);
+            GameController.Instance.showToast("돈이 모자랍니다.", 2);
             return;
         }
 
@@ -151,16 +153,16 @@ public class StatPanel : MonoBehaviour
 
         if (GameController.Instance.levelUpProfile(2))
         {
+            GameController.Instance.useGold(gold);
+            updateGoldText();
             int lv3 = GameController.Instance.getProfile(2);
             int value3 = (int)(((0.04f * lv3) / 4) * 100);
             battery.text = $"{value3:N0}% (Lv{lv3})";
-            GameController.Instance.useGold(price[level / 10]);
-            updateGoldText();
             updatePrice();
         }
         else
         {
-            GameController.Instance.showToast("�ִ� �����Դϴ�\n ���ڵ��� �������", 0);
+            GameController.Instance.showToast("최대 레벨입니다\n 먼지들을 쓸어보세요", 0);
         }
     }
 

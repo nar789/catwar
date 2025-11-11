@@ -48,7 +48,8 @@ public class SotrageItemController : MonoBehaviour
     }
 
     public void onBtnClick()
-    {         
+    {
+        GameController.Instance.playClickAudio();
         selected.SetActive(!selected.activeSelf);
         if (selected.activeSelf)
         {

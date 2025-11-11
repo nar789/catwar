@@ -50,9 +50,7 @@ public class StoragePanel : MonoBehaviour
                 list.Add(new Vector2(2, i));
             }*/
 
-            list = GameController.Instance.getMyAssetList();
-
-            generateItems();
+            reload();
             updateBaseInfo();
             updateSkinInfo();
         }
@@ -97,6 +95,7 @@ public class StoragePanel : MonoBehaviour
 
     public void setFilter(int filterType)
     {
+        GameController.Instance.playClickAudio();
         GameObject[] containers = {container, containerSkin, containerWeapon };
         for(int i=0;i<3;i++)
         {
