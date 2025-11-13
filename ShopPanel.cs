@@ -298,6 +298,8 @@ public class ShopPanel : MonoBehaviour
             storagePanel.reload();
         }
 
+        GameController.Instance.updateIsNoAd();
+
         GameController.Instance.showToast("스타터팩이 증정되었습니다!", 1);
         GameController.Instance.finishBuying();
         GameController.Instance.playWinAudio();

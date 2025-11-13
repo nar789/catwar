@@ -203,6 +203,8 @@ public class GameController : MonoBehaviour
     List<Vector2> myAssetList = new List<Vector2>();
 
 
+    public AdmobManager admobManager;
+    int isNoAd = 0;
 
 
     private void Awake()
@@ -241,16 +243,19 @@ public class GameController : MonoBehaviour
 
         //test2
         /*
-        PlayerPrefs.SetInt("gold", 0);
+        PlayerPrefs.SetInt("gold", 1000);
+        PlayerPrefs.SetInt("dia", 12000);
         PlayerPrefs.SetInt("speed", 30);
         PlayerPrefs.SetInt("charge", 30);
-        PlayerPrefs.SetInt("battery", 30);*/
+        PlayerPrefs.SetInt("battery", 30);
+        PlayerPrefs.SetInt("isNoAd", 0);
+        */
 
-
-        profile[0] = PlayerPrefs.GetInt("speed", 1);
-        profile[1] = PlayerPrefs.GetInt("charge", 1);
-        profile[2] = PlayerPrefs.GetInt("battery", 1);
-        gold = PlayerPrefs.GetInt("gold", 0);
+        isNoAd = PlayerPrefs.GetInt("isNoAd", 0);
+        profile[0] = PlayerPrefs.GetInt("speed", 7);
+        profile[1] = PlayerPrefs.GetInt("charge", 7);
+        profile[2] = PlayerPrefs.GetInt("battery", 7);
+        gold = PlayerPrefs.GetInt("gold", 100);
         buySpeaker = PlayerPrefs.GetInt("buySpeaker", 0) == 1;
         updateSkillBtn();
 
@@ -854,6 +859,7 @@ public class GameController : MonoBehaviour
 
     public void nextStage()
     {
+
         clickAudio.Play();
         Debug.Log("next stage.");
         closeAllPanel();
@@ -881,6 +887,13 @@ public class GameController : MonoBehaviour
         }
         lastAudioIdx = UnityEngine.Random.Range(0, audio.Length);
         audio[lastAudioIdx].Play();
+
+
+        if(isNoAd <= 0)
+        {
+            Debug.Log("show ad front");
+            admobManager.ShowFrontAd();
+        }
 
     }
 
@@ -956,7 +969,7 @@ public class GameController : MonoBehaviour
         {
             storagePanel.open();
         }
-
+        
         panels[idx].transform.GetChild(1).DOLocalMoveY(0, 1).SetUpdate(true);
     }
 
@@ -1461,6 +1474,38 @@ public class GameController : MonoBehaviour
     public void playWinAudio()
     {
         winAudio.Play();
+    }
+
+    public void updateIsNoAd()
+    {
+        isNoAd = 1;
+        PlayerPrefs.SetInt("isNoAd", 1);
+    }
+
+    public void playRewardAd()
+    {
+        string lastReward = PlayerPrefs.GetString("lastReward", "");
+        DateTime today = DateTime.Today;
+        if(lastReward != "")
+        {
+            DateTime lastRewardDate = DateTime.Parse(lastReward);
+            Debug.Log("last reward date " + lastRewardDate);
+            if(lastRewardDate == today)
+            {
+                showToast("하루에 한번 보상이 가능합니다.", 0);
+                return;
+            } 
+        }
+        admobManager.ShowRewardAd(completed => {
+            int myDia = getDia();
+            myDia += 100;
+            setDia(myDia);
+            updateDiaText();
+
+            PlayerPrefs.SetString("lastReward", today.ToString());
+            showToast("다이아 100개가 증정되었습니다!", 1);
+            playWinAudio();
+        });
     }
 
 }
